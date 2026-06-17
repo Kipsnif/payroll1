@@ -26,6 +26,18 @@ LEVEL_ICONS = {
     "Version": "📌"
 }
 
+# Mapping of each level to its children key (handles irregular plurals)
+CHILDREN_KEYS = {
+    "Administrator": "groups",
+    "Group": "corporations",
+    "Corporation": "companies",
+    "Company": "employees",
+    "Employee": "contracts",
+    "Contract": "periods",
+    "Period": "versions",
+    "Version": None  # Version has no children
+}
+
 # --- 2. MOCK DATA (8-Level Hierarchical Structure) ---
 # Each level stores entities with parent references and children lists
 ENTITIES = {
@@ -97,11 +109,7 @@ if "breadcrumb" not in st.session_state:
 # --- 4. HELPER FUNCTIONS ---
 def get_children_key(level):
     """Get the key used to store children in an entity"""
-    idx = LEVEL_INDEX[level]
-    if idx < len(HIERARCHY_LEVELS) - 1:
-        next_level = HIERARCHY_LEVELS[idx + 1]
-        return next_level.lower() + "s"
-    return None
+    return CHILDREN_KEYS.get(level)
 
 def get_entity(level, entity_id):
     """Retrieve an entity from the data"""
