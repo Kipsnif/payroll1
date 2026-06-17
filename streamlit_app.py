@@ -164,6 +164,19 @@ def render_dashboard():
     st.title(f"{LEVEL_ICONS['Administrator']} Main Hierarchy Dashboard")
     st.write("Navigate through the organizational structure starting from administrators.")
     
+    # --- Sidebar ---
+    st.sidebar.title("📍 Navigation Path")
+    st.sidebar.write("*(You are at the Dashboard level)*")
+    
+    st.sidebar.markdown("---")
+    col1, col2 = st.sidebar.columns(2)
+    with col1:
+        if st.sidebar.button("⬅️ Back"):
+            go_to_dashboard()
+    with col2:
+        if st.sidebar.button("🏠 Dashboard"):
+            go_to_dashboard()
+    
     st.markdown("---")
     st.subheader(f"{LEVEL_ICONS['Administrator']} Level 1: Administrators")
     
@@ -193,29 +206,41 @@ def render_entity_page():
     level_index = LEVEL_INDEX[current_level]
     icon = LEVEL_ICONS.get(current_level, "📋")
     
-    # --- Header ---
-    st.title(f"Level {level_index + 1}: {icon} {current_level} Profile")
-    st.caption(f"ID: {current_id}")
+    # --- Sidebar: Breadcrumb trail and navigation ---
+    st.sidebar.title("📍 Navigation Path")
     
-    # --- Navigation buttons ---
-    col1, col2, col3 = st.columns(3)
+    if st.session_state.breadcrumb:
+        for i, (lvl, eid) in enumerate(st.session_state.breadcrumb):
+            entity_data = get_entity(lvl, eid)
+            level_num = i + 1
+            
+            # Display current level differently (bold, non-clickable)
+            if i == len(st.session_state.breadcrumb) - 1:
+                st.sidebar.write(f"**Level {level_num}: {LEVEL_ICONS.get(lvl, '📋')} {entity_data['name']}** (current)")
+            else:
+                # Make previous levels clickable
+                if st.sidebar.button(
+                    f"Level {level_num}: {LEVEL_ICONS.get(lvl, '📋')} {entity_data['name']}",
+                    key=f"sidebar_nav_{i}_{eid}"
+                ):
+                    # Navigate to this level by truncating breadcrumb
+                    st.session_state.breadcrumb = st.session_state.breadcrumb[:i+1]
+                    st.rerun()
+    
+    st.sidebar.markdown("---")
+    
+    # Navigation buttons in sidebar
+    col1, col2 = st.sidebar.columns(2)
     with col1:
-        if st.button("⬅️ Back"):
+        if st.sidebar.button("⬅️ Back"):
             go_back()
     with col2:
-        if st.button("🏠 Dashboard"):
+        if st.sidebar.button("🏠 Dashboard"):
             go_to_dashboard()
     
-    st.markdown("---")
-    
-    # --- Breadcrumb trail ---
-    if st.session_state.breadcrumb:
-        breadcrumb_items = []
-        for lvl, eid in st.session_state.breadcrumb:
-            entity_data = get_entity(lvl, eid)
-            breadcrumb_items.append(f"{LEVEL_ICONS.get(lvl, '📋')} {entity_data['name']}")
-        breadcrumb_text = " → ".join(breadcrumb_items)
-        st.caption(f"📍 Path: {breadcrumb_text}")
+    # --- Main content area: Header ---
+    st.title(f"Level {level_index + 1}: {icon} {current_level} Profile")
+    st.caption(f"ID: {current_id}")
     
     st.markdown("---")
     
